@@ -10,4 +10,4 @@ pinned: false
 license: mit
 ---
 
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces#reference
+Largely referenced from [this space](https://huggingface.co/spaces/dt/ascii-art)
