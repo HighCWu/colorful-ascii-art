@@ -3,7 +3,6 @@ Refer to https://huggingface.co/spaces/dt/ascii-art/blob/main/app.py
 '''
 import os
 os.system("pip install gradio==2.9b23")
-os.environ["SYSTEM"] = "spaces"
 
 # Python code to convert an image to ASCII image.
 import sys, random, argparse
@@ -192,7 +191,7 @@ def sepia(input_img):
     encodedBytes = base64.b64encode(my_html.encode("utf-8"))
     encodedStr = str(encodedBytes, "utf-8")
     my_file_download = r'''
-<a href="data:image/svg+xml;base64,%s" download="result.svg">Click to download result.svg</a>.
+<a href="data:image/svg+xml;base64,%s" download="result.svg" style="background-color:rgb(0,0,255)">Click to download result.svg</a>.
 ''' % encodedStr
 
     return [my_image, my_file_download, my_html]
