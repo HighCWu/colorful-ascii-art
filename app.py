@@ -5,6 +5,7 @@ Refer to https://huggingface.co/spaces/dt/ascii-art/blob/main/app.py
 import sys, random, argparse
 import numpy as np
 import math
+import base64
 from PIL import Image, ImageFont, ImageDraw
 import gradio as gr
 
@@ -184,15 +185,18 @@ def sepia(input_img):
 
     my_image, my_colors = colorizeTextImage(input_img, my_image)
     my_html = convertTextToHTML(my_colors, aimg)
-    with open("result.svg", "w") as f:
-        f.write(my_html)
+    encodedBytes = base64.b64encode(my_html.encode("utf-8"))
+    encodedStr = str(encodedBytes, "utf-8")
+    my_file_download = r'''
+<a href="data:image/svg+xml;base64,%s" download="result.svg">Click to download result.svg</a>.
+''' % encodedStr
 
-    return [my_image, "result.svg", my_html]
+    return [my_image, my_file_download, my_html]
 
 
 iface = gr.Interface(sepia, 
                      gr.inputs.Image(), 
-                     ["image", "file", "html"],
+                     ["image", "html", "html"],
                      title = "Colorful ASCII Art",
                      description = "Convert an image to colorful ASCII art based on ascii character density. Copy and paste the text to a notepad to see it correctly")
 
