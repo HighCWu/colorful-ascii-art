@@ -201,6 +201,6 @@ iface = gr.Interface(sepia,
                      gr.inputs.Image(), 
                      ["image", "html", "html"],
                      title = "Colorful ASCII Art",
-                     description = "Convert an image to colorful ASCII art based on ascii character density. Copy and paste the text to a notepad to see it correctly")
+                     description = "Convert an image to colorful ASCII art based on ascii character density. Click the first output text to download the generated svg.")
 
 iface.launch()
