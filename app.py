@@ -187,13 +187,13 @@ def sepia(input_img):
     with open("result.svg", "w") as f:
         f.write(my_html)
 
-    return [my_image, my_html, "result.svg"]
+    return [my_image, "result.svg", my_html]
 
 
 iface = gr.Interface(sepia, 
                      gr.inputs.Image(), 
-                     ["image", "html", "file"],
+                     ["image", "file", "html"],
                      title = "Colorful ASCII Art",
                      description = "Convert an image to colorful ASCII art based on ascii character density. Copy and paste the text to a notepad to see it correctly")
 
-iface.launch(enable_queue=True)
+iface.launch()

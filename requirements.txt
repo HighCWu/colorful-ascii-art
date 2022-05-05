@@ -1,2 +1,2 @@
 Pillow
-gradio
+gradio==2.9b23
