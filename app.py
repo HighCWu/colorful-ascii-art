@@ -2,7 +2,7 @@
 Refer to https://huggingface.co/spaces/dt/ascii-art/blob/main/app.py
 '''
 import os
-os.system("pip install gradio==2.9b23")
+os.system("pip install gradio==2.9.4")
 
 # Python code to convert an image to ASCII image.
 import sys, random, argparse
@@ -203,4 +203,4 @@ iface = gr.Interface(sepia,
                      title = "Colorful ASCII Art",
                      description = "Convert an image to colorful ASCII art based on ascii character density. Click the first output text to download the generated svg.")
 
-iface.launch()
+iface.launch(enable_queue=True)
