@@ -5,9 +5,8 @@ Refer to https://huggingface.co/spaces/dt/ascii-art/blob/main/app.py
 import sys, random, argparse
 import numpy as np
 import math
-import gradio as gr
-
 from PIL import Image, ImageFont, ImageDraw
+import gradio as gr
 
 # 70 levels of gray
 gscale1 = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
@@ -145,26 +144,20 @@ def colorizeTextImage(input_img, text_img):
 
 def convertTextToHTML(our_colors, aimg):
     bimg = r'''
-<!DOCTYPE html>
-<html>
-<body>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 92vw;" viewBox="-100, -100, 2000, 2000">
 <style>text{ font-size:8px; }</style>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 100vw;height: 100vh;" viewBox="0, 0, 1200, 1200">
 '''
     for i in range(our_colors.shape[0]):
         our_colors2 = our_colors[i]
         aimg2 = aimg[i]
         for j in range(our_colors2.shape[0]):
             [r, g, b] = our_colors2[j]
-            p = aimg2[j]
+            p = aimg2[j].replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
             if p == ' ': continue
-            aimg3 = f'<text x="{j*6}" y="{i*11}" style="fill:rgb{int(r),int(g),int(b)};">{p}</text>\n'
+            aimg3 = f'<text x="{j*6+450}" y="{i*11}" style="fill:rgb{int(r),int(g),int(b)};">{p}</text>\n'
             bimg += aimg3
     bimg += r'''
 </svg>
- 
-</body>
-</html>
 '''
 
     return bimg
@@ -191,14 +184,16 @@ def sepia(input_img):
 
     my_image, my_colors = colorizeTextImage(input_img, my_image)
     my_html = convertTextToHTML(my_colors, aimg)
+    with open("result.svg", "w") as f:
+        f.write(my_html)
 
-    return [my_image, my_html]
+    return [my_image, my_html, "result.svg"]
 
 
 iface = gr.Interface(sepia, 
                      gr.inputs.Image(), 
-                     ["image", "html"],
+                     ["image", "html", "file"],
                      title = "Colorful ASCII Art",
-                     description = "Convert an image to colorful ASCII art based on ascii character density. It generates converted image and svg.")
+                     description = "Convert an image to colorful ASCII art based on ascii character density. Copy and paste the text to a notepad to see it correctly")
 
-iface.launch()
+iface.launch(enable_queue=True)
