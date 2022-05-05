@@ -1,6 +1,9 @@
 '''
 Refer to https://huggingface.co/spaces/dt/ascii-art/blob/main/app.py
 '''
+import os
+os.system("pip install gradio==2.9b23")
+
 # Python code to convert an image to ASCII image.
 import sys, random, argparse
 import numpy as np
