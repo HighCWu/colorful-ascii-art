@@ -1,12 +1,16 @@
 '''
 Refer to https://huggingface.co/spaces/dt/ascii-art/blob/main/app.py
 '''
+
 # Python code to convert an image to ASCII image.
 import sys, random, argparse
 import numpy as np
 import math
 import base64
 from PIL import Image, ImageFont, ImageDraw
+from moviepy.editor import *
+from tqdm.auto import tqdm
+
 import gradio as gr
 
 # 70 levels of gray
@@ -43,7 +47,6 @@ def covertImageToAscii(input_img, cols, scale, moreLevels):
     # store dimensions
     # store dimensions
     W, H = image.size[0], image.size[1]
-    print("input image dims: %d x %d" % (W, H))
  
     # compute width of tile
     w = W/cols
@@ -53,9 +56,6 @@ def covertImageToAscii(input_img, cols, scale, moreLevels):
  
     # compute number of rows
     rows = int(H/h)
-     
-    print("cols: %d, rows: %d" % (cols, rows))
-    print("tile dims: %d x %d" % (w, h))
  
     # check if image size is too small
     if cols > W or rows > H:
@@ -129,44 +129,18 @@ def colorizeTextImage(input_img, text_img):
     out_img = input_img * alpha
     out_colors = out_img.sum((1,3), keepdims=True) / (alpha.sum((1,3), keepdims=True) + 1e-12)
     out_img = out_colors * alpha
-    out_img = np.concatenate([out_img, alpha * 255], -1)
     out_img = out_img.reshape((
         out_img.shape[0] * out_img.shape[1],
         out_img.shape[2] * out_img.shape[3],
-        4
+        3
     ))
     out_img = np.clip(out_img, 0, 255)
     out_img = np.uint8(out_img)
-    out_img = Image.fromarray(out_img)
 
-    our_colors = np.clip(out_colors, 0, 255)
-    our_colors = np.uint8(out_colors)[:,0,:,0]
-
-    return out_img, our_colors
-
-
-def convertTextToHTML(our_colors, aimg):
-    bimg = r'''
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 92vw;" viewBox="-100, -100, 2000, 2000">
-<style>text{ font-size:8px; }</style>
-'''
-    for i in range(our_colors.shape[0]):
-        our_colors2 = our_colors[i]
-        aimg2 = aimg[i]
-        for j in range(our_colors2.shape[0]):
-            [r, g, b] = our_colors2[j]
-            p = aimg2[j].replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
-            if p == ' ': continue
-            aimg3 = f'<text x="{j*6+450}" y="{i*11}" style="fill:rgb{int(r),int(g),int(b)};">{p}</text>\n'
-            bimg += aimg3
-    bimg += r'''
-</svg>
-'''
-
-    return bimg
+    return out_img
  
 
-def sepia(input_img):
+def sepia(input_img, no_colors=False):
     input_img = Image.fromarray(input_img).convert('RGB')
     aimg = covertImageToAscii(input_img, 200, 6/11, True)
     blank_image = Image.new(mode="RGB", size=(len(aimg[0])*6, len(aimg)*11), color=(0, 0, 0))
@@ -175,6 +149,8 @@ def sepia(input_img):
     image_editable = ImageDraw.Draw(my_image)
     
     image_editable.text((0, 0), "\n".join(aimg), (255, 255, 255), font=font, spacing=0)
+    if no_colors:
+        return np.asarray(my_image)
 
     input_img_resize = input_img.resize((len(aimg[0])*6, len(aimg)*11), Image.BICUBIC)
     w, h = input_img.size
@@ -185,21 +161,22 @@ def sepia(input_img):
     input_img_resize.paste(input_img, (0, 0, w, h))
     input_img = input_img_resize
 
-    my_image, my_colors = colorizeTextImage(input_img, my_image)
-    my_html = convertTextToHTML(my_colors, aimg)
-    encodedBytes = base64.b64encode(my_html.encode("utf-8"))
-    encodedStr = str(encodedBytes, "utf-8")
-    my_file_download = r'''
-<a href="data:image/svg+xml;base64,%s" download="result.svg" style="background-color:rgb(0,0,255)">Click to download result.svg</a>.
-''' % encodedStr
+    my_image = colorizeTextImage(input_img, my_image)
 
-    return [my_image, my_file_download, my_html]
+    return my_image
 
 
-iface = gr.Interface(sepia, 
-                     gr.inputs.Image(), 
-                     ["image", "html", "html"],
-                     title = "Colorful ASCII Art",
-                     description = "Convert an image to colorful ASCII art based on ascii character density. Click the first output text to download the generated svg.")
+def sepia_video(video_file, no_colors=False):
+    clip = VideoFileClip(video_file)
+    audioclip = clip.audio
+    frames = int(clip.fps * clip.duration)
+    imgs = []
+    for i in tqdm(range(frames)):
+        imgs.append(sepia(clip.get_frame(i/clip.fps), no_colors))
+    video = ImageSequenceClip(imgs, fps=clip.fps)
+    video = video.set_audio(audioclip)
+    video.write_videofile("out.mp4", fps=clip.fps)
 
-iface.launch()
+    return "out.mp4"
+
+sepia_video("input.mp4", no_colors=False)

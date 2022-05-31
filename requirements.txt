@@ -1,1 +1,4 @@
+moviepy
 Pillow
+gradio==3.0.5
+tqdm
